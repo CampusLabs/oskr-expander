@@ -18,17 +18,22 @@
   (:require [com.stuartsierra.component :as component]
             [manifold.stream :as s]
             [oskr-expander.recipient :as r]
+            [oskr-expander.protocols :as p]
+            [oskr-expander.message :as m]
             [taoensso.timbre :refer [info debug error warn]]
             [cheshire.core :as json]))
 
-(defn recipients->parts [{entity :data :as specification} recipients]
-  (let [template (dissoc specification :expansion :data)]
+(defn recipients->parts [{entity-data :data :as specification} recipients]
+  (let [part-template (dissoc specification :expansion :data)]
     (map (fn [{:keys [id channels digestAt data]}]
-           (assoc template :recipientId id
-                           :channels channels
-                           :digestAt digestAt
-                           :data {:recipient data
-                                  :entity entity})) recipients)))
+           (->
+             (assoc part-template :recipientId id
+                                  :channels channels
+                                  :digestAt digestAt
+                                  :data {:recipient data
+                                         :entity    entity-data})
+             m/map->Part))
+         recipients)))
 
 (defn make-recipient-handler [specification parts-stream]
   (fn [recipients]
@@ -36,15 +41,18 @@
     (->> (recipients->parts specification recipients)
          (s/put-all! parts-stream))))
 
-(defn make-specification-handler [parts-stream]
-  (fn [{:keys [expansion] :as spec}]
-    (let [recipient-handler (make-recipient-handler spec parts-stream)]
-      (debug "expanding recipients")
-      (r/expand recipient-handler expansion))))
+(defn make-message-handler [parts-stream]
+  (fn [message]
+    (debug "handling messsage")
+    (if (p/punctuation? message)
+      (s/put! parts-stream message)
+      (let [recipient-handler (make-recipient-handler message parts-stream)]
+        (debug "expanding recipients")
+        (r/expand recipient-handler (:expansion message))))))
 
 (defn expand [specification-stream part-stream]
-  (let [specification-handler (make-specification-handler part-stream)]
-    (s/consume-async specification-handler specification-stream)))
+  (let [message-handler (make-message-handler part-stream)]
+    (s/consume-async message-handler specification-stream)))
 
 (defrecord Processor [part-stream specification-stream]
   component/Lifecycle
@@ -62,17 +70,21 @@
 (comment
   (do
     (def specification
-      (-> "/Users/llevie/workspace/oskr-expander/resources/message.json"
+      (-> "/Users/larslevie/workspace/oskr-expander/resources/message.json"
           (java.io.File.)
           slurp
           (json/parse-string true)
-          :payload))
+          :payload
+          m/map->Specification))
+
+    (def punctuation
+      (m/map->Punctuation {:partitionId 1 :offset 1}))
 
     (def part-stream (s/stream))
     (def processor (new-processor part-stream))
     (alter-var-root #'processor component/start)
-    (def last-part (atom []))
-    (s/consume #(swap! last-part conj %) part-stream)
-
+    (def parts (atom []))
+    (s/consume #(swap! parts conj %) part-stream)
     (s/put! (:specification-stream processor) specification)
+    (s/put! (:specification-stream processor) punctuation)
     (alter-var-root #'processor component/stop)))
