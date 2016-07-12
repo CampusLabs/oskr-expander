@@ -48,4 +48,6 @@
                    success? (process-recipients recipients)]
         (if (and bulk_id success?)
           (d/recur bulk_id)
-          success?)))))
+          (do
+            (debug "Done")
+            success?))))))

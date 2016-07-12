@@ -17,8 +17,8 @@
 (ns oskr-expander.specification
   (:require [com.stuartsierra.component :as component]
             [manifold.stream :as s]
+            [manifold.deferred :as d]
             [oskr-expander.recipient :as r]
-            [oskr-expander.protocols :as p]
             [oskr-expander.message :as m]
             [taoensso.timbre :refer [info debug error warn]]
             [cheshire.core :as json]))
@@ -32,7 +32,8 @@
                                   :digestAt digestAt
                                   :data {:recipient data
                                          :entity    entity-data})
-             m/map->Part))
+             m/map->Part
+             (with-meta (meta specification))))
          recipients)))
 
 (defn make-recipient-handler [specification parts-stream]
@@ -41,31 +42,38 @@
     (->> (recipients->parts specification recipients)
          (s/put-all! parts-stream))))
 
-(defn make-message-handler [parts-stream]
-  (fn [message]
+(defn make-message-handler [part-stream]
+  (fn [specification]
     (debug "handling messsage")
-    (if (p/punctuation? message)
-      (s/put! parts-stream message)
-      (let [recipient-handler (make-recipient-handler message parts-stream)]
-        (debug "expanding recipients")
-        (r/expand recipient-handler (:expansion message))))))
+    (let [recipient-handler (make-recipient-handler specification part-stream)
+          punctuation (m/map->Punctuation (meta specification))]
+      (debug "expanding recipients" (meta specification))
+      (d/chain' (r/expand recipient-handler (:expansion specification))
+        (fn [_]
+          (debug "punctuation" (meta specification))
+          (s/put! part-stream punctuation))))))
 
 (defn expand [specification-stream part-stream]
   (let [message-handler (make-message-handler part-stream)]
-    (s/consume-async message-handler specification-stream)))
+    (d/loop []
+      (d/let-flow [specification (s/take! specification-stream)]
+        (when specification
+          (d/chain' (message-handler specification)
+            (fn [_] (d/recur))))))))
 
-(defrecord Processor [part-stream specification-stream]
+(defrecord Processor [part-stream specification-stream finished?]
   component/Lifecycle
   (start [processor]
-    (let [specification-stream (s/stream)]
-      (expand specification-stream part-stream)
-      (assoc processor :specification-stream specification-stream)))
+    (let [specification-stream (s/stream 16)
+          finished? (expand specification-stream part-stream)]
+      (assoc processor :specification-stream specification-stream :finished? finished?)))
   (stop [processor]
     (s/close! specification-stream)
-    (assoc processor :specification-stream nil)))
+    @finished?
+    (assoc processor :specification-stream nil :finished? nil)))
 
 (defn new-processor [part-stream]
-  (Processor. part-stream nil))
+  (Processor. part-stream nil nil))
 
 (comment
   (do
@@ -77,14 +85,10 @@
           :payload
           m/map->Specification))
 
-    (def punctuation
-      (m/map->Punctuation {:partitionId 1 :offset 1}))
-
     (def part-stream (s/stream))
     (def processor (new-processor part-stream))
     (alter-var-root #'processor component/start)
     (def parts (atom []))
-    (s/consume #(swap! parts conj %) part-stream)
+    (s/consume-async #(swap! parts conj %) part-stream)
     (s/put! (:specification-stream processor) specification)
-    (s/put! (:specification-stream processor) punctuation)
     (alter-var-root #'processor component/stop)))

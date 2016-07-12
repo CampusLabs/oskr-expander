@@ -27,4 +27,4 @@
                  [com.stuartsierra/component "0.3.1"]
                  [org.apache.kafka/kafka-clients "0.9.0.1"]
                  [org.bovinegenius/exploding-fish "0.3.4"]
-                 [manifold "0.1.4"]])
+                 [manifold "0.1.5-alpha2"]])
