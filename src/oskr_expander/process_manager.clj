@@ -18,7 +18,7 @@
   (:require [com.stuartsierra.component :as component]
             [manifold.stream :as s]
             [taoensso.timbre :refer [info debug error warn]]
-            [oskr-expander.specification :as spec]
+            [oskr-expander.processor :as spec]
             [oskr-expander.message :as m]
             [oskr-expander.producer :as producer]
             [cheshire.core :as json]))
@@ -47,22 +47,20 @@
     #(route-specification % producer processor-atom)
     specification-stream))
 
-(defrecord ProcessManager [specification-stream producer processor-atom]
+(defrecord ProcessManager [consumer producer processor-atom]
   component/Lifecycle
   (start [process-manager]
     (debug "starting process mananger")
     (let [processor-atom (atom {})]
-      (consume specification-stream producer processor-atom)
-      (assoc process-manager
-        :processor-atom processor-atom))
-    )
+      (consume (:message-stream consumer) producer processor-atom)
+      (assoc process-manager :processor-atom processor-atom)))
   (stop [process-manager]
     (debug "stopping process mananger")
     (doall (pmap component/stop (vals @processor-atom)))
     (assoc process-manager :processor-atom nil)))
 
-(defn new-process-manager [specification-stream]
-  (ProcessManager. specification-stream nil nil))
+(defn new-process-manager []
+  (ProcessManager. nil nil nil))
 
 (comment
   (do

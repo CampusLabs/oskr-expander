@@ -14,7 +14,7 @@
 ; limitations under the License.
 ;
 
-(ns oskr-expander.specification
+(ns oskr-expander.processor
   (:require [com.stuartsierra.component :as component]
             [manifold.stream :as s]
             [manifold.deferred :as d]
@@ -65,10 +65,12 @@
 (defrecord Processor [producer specification-stream finished?]
   component/Lifecycle
   (start [processor]
+    (debug "Starting processor")
     (let [specification-stream (s/stream 16)
           finished? (expand specification-stream producer)]
       (assoc processor :specification-stream specification-stream :finished? finished?)))
   (stop [processor]
+    (debug "Stopping processor")
     (s/close! specification-stream)
     @finished?
     (assoc processor :specification-stream nil :finished? nil)))
