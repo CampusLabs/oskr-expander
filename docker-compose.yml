@@ -18,9 +18,10 @@ expander:
 
 parts:
   image: quay.io/orgsync/kafka:0.9.0.1
+  dns: 172.17.0.1
   command: >
     bin/kafka-console-consumer.sh
-      --bootstrap-server "kafka:9092"
+      --bootstrap-server "kafka.service.consul:9092"
       --new-consumer
       --from-beginning
       --topic MessageParts

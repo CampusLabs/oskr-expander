@@ -18,3 +18,7 @@
 
 (defprotocol Punctuated
   (punctuation? [message]))
+
+(defprotocol Publishable
+  (send-message [publisher message])
+  (flush-messages [publisher]))
