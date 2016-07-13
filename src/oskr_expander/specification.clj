@@ -20,6 +20,7 @@
             [manifold.deferred :as d]
             [oskr-expander.recipient :as r]
             [oskr-expander.message :as m]
+            [oskr-expander.protocols :as p]
             [taoensso.timbre :refer [info debug error warn]]
             [cheshire.core :as json]))
 
@@ -36,49 +37,49 @@
              (with-meta (meta specification))))
          recipients)))
 
-(defn make-recipient-handler [specification parts-stream]
+(defn make-recipient-handler [specification producer]
   (fn [recipients]
     (debug "enqueing parts")
     (->> (recipients->parts specification recipients)
-         (s/put-all! parts-stream))))
+         (p/send-message producer))))
 
-(defn make-message-handler [part-stream]
+(defn make-message-handler [producer]
   (fn [specification]
     (debug "handling messsage")
-    (let [recipient-handler (make-recipient-handler specification part-stream)
-          punctuation (m/map->Punctuation (meta specification))]
+    (let [recipient-handler (make-recipient-handler specification producer)]
       (debug "expanding recipients" (meta specification))
       (d/chain' (r/expand recipient-handler (:expansion specification))
         (fn [_]
-          (debug "punctuation" (meta specification))
-          (s/put! part-stream punctuation))))))
+          (p/flush-messages producer)
+          ;;TODO Need to ack to consumer after flush
+          )))))
 
-(defn expand [specification-stream part-stream]
-  (let [message-handler (make-message-handler part-stream)]
+(defn expand [specification-stream producer]
+  (let [message-handler (make-message-handler producer)]
     (d/loop []
       (d/let-flow [specification (s/take! specification-stream)]
         (when specification
           (d/chain' (message-handler specification)
             (fn [_] (d/recur))))))))
 
-(defrecord Processor [part-stream specification-stream finished?]
+(defrecord Processor [producer specification-stream finished?]
   component/Lifecycle
   (start [processor]
     (let [specification-stream (s/stream 16)
-          finished? (expand specification-stream part-stream)]
+          finished? (expand specification-stream producer)]
       (assoc processor :specification-stream specification-stream :finished? finished?)))
   (stop [processor]
     (s/close! specification-stream)
     @finished?
     (assoc processor :specification-stream nil :finished? nil)))
 
-(defn new-processor [part-stream]
-  (Processor. part-stream nil nil))
+(defn new-processor [producer]
+  (Processor. producer nil nil))
 
 (comment
   (do
     (def specification
-      (-> "/Users/larslevie/workspace/oskr-expander/resources/message.json"
+      (-> "/code/resources/message.json"
           (java.io.File.)
           slurp
           (json/parse-string true)

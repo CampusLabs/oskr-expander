@@ -20,13 +20,14 @@
             [taoensso.timbre :refer [info debug error warn]]
             [oskr-expander.specification :as spec]
             [oskr-expander.message :as m]
+            [oskr-expander.producer :as producer]
             [cheshire.core :as json]))
 
 (defn enqueue-specification [{:keys [specification-stream]} specification]
   (debug "enqueing specification onto processor")
   (s/put! specification-stream specification))
 
-(defn route-specification [specification part-stream processor-atom]
+(defn route-specification [specification producer processor-atom]
   (debug "routing specification")
   (debug processor-atom)
   (let [partition-key (-> (meta specification)
@@ -35,42 +36,44 @@
     (println partition-key processors)
     (if-let [processor (processors partition-key)]
       (enqueue-specification processor specification)
-      (let [processor (-> (spec/new-processor part-stream)
+      (let [processor (-> (spec/new-processor producer)
                           component/start)]
         (swap! processor-atom #(assoc % partition-key processor))
         (enqueue-specification processor specification)))))
 
-(defn consume [specification-stream part-stream processor-atom]
+(defn consume [specification-stream producer processor-atom]
   (debug "consuming specification stream")
   (s/consume-async
-    #(route-specification % part-stream processor-atom)
+    #(route-specification % producer processor-atom)
     specification-stream))
 
-(defrecord ProcessManager [specification-stream part-stream processor-atom]
+(defrecord ProcessManager [specification-stream producer processor-atom]
   component/Lifecycle
   (start [process-manager]
     (debug "starting process mananger")
-    (let [processor-atom (atom {})
-          part-stream (s/stream)]
-      (consume specification-stream part-stream processor-atom)
+    (let [processor-atom (atom {})]
+      (consume specification-stream producer processor-atom)
       (assoc process-manager
-        :processor-atom processor-atom
-        :part-stream part-stream))
+        :processor-atom processor-atom))
     )
   (stop [process-manager]
     (debug "stopping process mananger")
     (doall (pmap component/stop (vals @processor-atom)))
-    (s/close! part-stream)
-    (assoc process-manager :part-stream nil :processor-atom nil)))
+    (assoc process-manager :processor-atom nil)))
 
 (defn new-process-manager [specification-stream]
   (ProcessManager. specification-stream nil nil))
 
 (comment
   (do
+    (s/put-all! specification-stream (take 12 specifications-with-meta))))
+
+
+(comment
+  (do
     (def offset-atom (atom 0))
     (def specifications
-      (-> "/Users/larslevie/workspace/oskr-expander/resources/message.json"
+      (-> "/code/resources/message.json"
           (java.io.File.)
           slurp
           (json/parse-string true)
@@ -86,10 +89,14 @@
         specifications))
 
     (def specification-stream (s/stream))
-    (def process-manager (new-process-manager specification-stream))
-    (alter-var-root #'process-manager component/start)
-    (def part-stream (:part-stream process-manager))
-    (def parts (atom []))
-    (s/consume #(swap! parts conj %) part-stream)
-    (s/put-all! specification-stream (take 12 specifications-with-meta))
-    (alter-var-root #'process-manager component/stop)))
+
+    (def producer (producer/new-producer "kafka.service.consul:9092" "MessageParts" :id))
+    (alter-var-root #'producer component/start)
+    (def process-manager (-> (new-process-manager specification-stream)
+                             (assoc :producer producer)))
+    (alter-var-root #'process-manager component/start)))
+
+(comment
+  (do
+    (alter-var-root #'process-manager component/stop)
+    (alter-var-root #'producer component/stop)))
