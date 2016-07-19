@@ -20,7 +20,7 @@
             [clojure.walk :refer [stringify-keys]]
             [cheshire.core :as json]
             [manifold.deferred :as d]
-            [taoensso.timbre :refer [info debug error warn]])
+            [clojure.tools.logging :refer [info debug error warn]])
   (:import [org.apache.kafka.common.serialization StringSerializer]
            [org.apache.kafka.clients.producer KafkaProducer ProducerRecord]
            [java.util Map]
@@ -28,22 +28,25 @@
 
 (defrecord Producer [config topic key-fn kafka-producer]
   p/Publishable
-  (send-message [_ message]
+  (send-message! [_ message]
     (let [key (key-fn message)
           message-string (json/generate-string message)
           record (ProducerRecord. topic key message-string)]
-      (debug record)
+      (info "Sending record" record)
       (.send kafka-producer record)))
 
   (flush-messages [_]
+    (info "Flushing")
     (.flush kafka-producer))
 
   component/Lifecycle
   (start [producer]
+    (info "Starting producer")
     (let [kafka-producer (KafkaProducer. ^Map config)]
       (assoc producer :kafka-producer kafka-producer)))
 
   (stop [producer]
+    (info "Stopping producer")
     (.close kafka-producer 10 TimeUnit/SECONDS)
     (assoc producer :kafka-producer nil)))
 

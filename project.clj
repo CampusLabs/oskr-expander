@@ -22,13 +22,16 @@
   :dependencies [[aleph "0.4.1"]
                  [org.clojure/clojure "1.8.0"]
                  [byte-streams "0.2.2"]
-                 [com.taoensso/timbre "4.2.1"]
+                 [org.clojure/tools.logging "0.3.1"]
                  [cheshire "5.6.1"]
                  [com.stuartsierra/component "0.3.1"]
                  [org.apache.kafka/kafka-clients "0.9.0.1"]
                  [org.bovinegenius/exploding-fish "0.3.4"]
                  [manifold "0.1.5-alpha2"]
                  [org.apache.kafka/kafka-clients "0.9.0.1"]
-                 [environ "1.0.3"]]
+                 [environ "1.0.3"]
+                 [org.slf4j/slf4j-log4j12 "1.7.13"]
+                 [org.slf4j/slf4j-api "1.7.13"]
+                 [log4j/log4j "1.2.17"]]
   :profiles {:repl {:jvm-opts
                     ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"]}})

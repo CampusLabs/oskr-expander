@@ -21,7 +21,7 @@
             [oskr-expander.recipient :as r]
             [oskr-expander.message :as m]
             [oskr-expander.protocols :as p]
-            [taoensso.timbre :refer [info debug error warn]]
+            [clojure.tools.logging :refer [info debug error warn]]
             [cheshire.core :as json]))
 
 (defn recipients->parts [{entity-data :data :as specification} recipients]
@@ -39,44 +39,47 @@
 
 (defn make-recipient-handler [specification producer]
   (fn [recipients]
-    (debug "enqueing parts")
+    (info "enqueing parts")
     (->> (recipients->parts specification recipients)
-         (p/send-message producer))))
+         (p/send-message! producer))))
 
-(defn make-message-handler [producer]
+(defn make-message-handler [producer consumer]
   (fn [specification]
-    (debug "handling messsage")
+    (info "handling messsage")
+
     (let [recipient-handler (make-recipient-handler specification producer)]
-      (debug "expanding recipients" (meta specification))
+      (info "expanding recipients" (meta specification))
+
       (d/chain' (r/expand recipient-handler (:expansion specification))
         (fn [_]
           (p/flush-messages producer)
-          ;;TODO Need to ack to consumer after flush
-          )))))
+          (p/commit! consumer (meta specification)))))))
 
-(defn expand [specification-stream producer]
-  (let [message-handler (make-message-handler producer)]
+(defn expand [specification-stream producer consumer]
+  (let [message-handler (make-message-handler producer consumer)]
     (d/loop []
       (d/let-flow [specification (s/take! specification-stream)]
         (when specification
           (d/chain' (message-handler specification)
             (fn [_] (d/recur))))))))
 
-(defrecord Processor [producer specification-stream finished?]
+(defrecord Processor [producer consumer specification-stream finished?]
   component/Lifecycle
   (start [processor]
-    (debug "Starting processor")
+    (info "Starting processor")
+
     (let [specification-stream (s/stream 16)
-          finished? (expand specification-stream producer)]
+          finished? (expand specification-stream producer consumer)]
       (assoc processor :specification-stream specification-stream :finished? finished?)))
+
   (stop [processor]
-    (debug "Stopping processor")
+    (info "Stopping processor")
     (s/close! specification-stream)
     @finished?
     (assoc processor :specification-stream nil :finished? nil)))
 
-(defn new-processor [producer]
-  (Processor. producer nil nil))
+(defn new-processor [producer consumer]
+  (Processor. producer consumer nil nil))
 
 (comment
   (do

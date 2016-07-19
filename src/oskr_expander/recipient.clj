@@ -20,7 +20,7 @@
             [manifold.deferred :as d]
             [cheshire.core :as json]
             [org.bovinegenius.exploding-fish :as uri]
-            [taoensso.timbre :refer [info debug error warn]])
+            [clojure.tools.logging :refer [info debug error warn trace]])
   (:import (java.io Reader)))
 
 (defn build-url [url-base bulk-id]
@@ -29,25 +29,25 @@
           true str))
 
 (defn execute-query [url body]
-  (debug "requesting url" url)
-  (http/get url {:headers {:content-type "application/json"}
-                 :body body}))
+  (info "requesting url" url)
+  (-> (http/get url {:headers {:content-type "application/json"}
+                     :body    body})
+      (d/timeout! 10000)))
 
 (defn parse-body [{:keys [body]}]
-  (debug "parsing request body")
+  (info "parsing request body")
   (-> (byte/convert body Reader)
       (json/parse-stream true)))
 
 (defn expand [process-recipients {:keys [endpoint] :as expansion}]
-  (debug "generate query")
+  (info "generate query")
   (let [query-json (json/generate-string expansion)]
     (d/loop [bulk-id nil]
-      (d/let-flow [url (build-url endpoint bulk-id)
-                   response (execute-query url query-json)
-                   {:keys [bulk_id recipients]} (parse-body response)
-                   success? (process-recipients recipients)]
-        (if (and bulk_id success?)
-          (d/recur bulk_id)
-          (do
-            (debug "Done")
-            success?))))))
+      (-> (d/let-flow [url (build-url endpoint bulk-id)
+                       response (execute-query url query-json)
+                       {:keys [bulk_id recipients]} (parse-body response)
+                       success? (process-recipients recipients)]
+            (if (and bulk_id success?)
+              (d/recur bulk_id)
+              success?))
+          (d/catch' (fn [e] (error e)))))))

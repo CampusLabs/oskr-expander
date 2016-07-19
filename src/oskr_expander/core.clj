@@ -26,16 +26,20 @@
     [environ.core :refer [env]]))
 
 (defn create-system []
-  (-> (component/system-map
-        :producer (producer/new-producer
-                    (env "KAFKA_BOOTSTRAP" "kafka.service.consul:9092")
-                    (env "KAFKA_TOPIC" "MessageParts")
-                    :id)
-        :process-manager (process-manager/new-process-manager)
-        :consumer (consumer/new-consumer))
+  (let [kafka-bootstrap (env "KAFKA_BOOTSTRAP" "kafka.service.consul:9092")]
+    (-> (component/system-map
+          :producer (producer/new-producer
+                      kafka-bootstrap
+                      (env "KAFKA_PART_TOPIC" "MessageParts")
+                      :id)
+          :process-manager (process-manager/new-process-manager)
+          :consumer (consumer/new-consumer
+                      kafka-bootstrap
+                      (env "KAFKA_GROUP_ID" "oskr-expander")
+                      (env "KAFKA_SPEC_TOPIC" "Communications")))
 
-      (component/system-using
-        {:process-manager [:consumer :producer]})))
+        (component/system-using
+          {:process-manager [:consumer :producer]}))))
 
 
 (comment
@@ -46,7 +50,6 @@
 
 (comment
   (alter-var-root #'s component/stop))
-
 
 (comment
   (do

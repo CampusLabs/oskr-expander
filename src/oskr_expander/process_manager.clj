@@ -17,45 +17,45 @@
 (ns oskr-expander.process-manager
   (:require [com.stuartsierra.component :as component]
             [manifold.stream :as s]
-            [taoensso.timbre :refer [info debug error warn]]
+            [clojure.tools.logging :refer [info debug error warn]]
             [oskr-expander.processor :as spec]
             [oskr-expander.message :as m]
             [oskr-expander.producer :as producer]
             [cheshire.core :as json]))
 
 (defn enqueue-specification [{:keys [specification-stream]} specification]
-  (debug "enqueing specification onto processor")
+  (info "enqueing specification onto processor")
   (s/put! specification-stream specification))
 
-(defn route-specification [specification producer processor-atom]
-  (debug "routing specification")
-  (debug processor-atom)
+(defn route-specification [specification producer consumer processor-atom]
+  (info "routing specification")
+  (info processor-atom)
   (let [partition-key (-> (meta specification)
                           (select-keys [:topic :partition]))
         processors @processor-atom]
     (println partition-key processors)
     (if-let [processor (processors partition-key)]
       (enqueue-specification processor specification)
-      (let [processor (-> (spec/new-processor producer)
+      (let [processor (-> (spec/new-processor producer consumer)
                           component/start)]
         (swap! processor-atom #(assoc % partition-key processor))
         (enqueue-specification processor specification)))))
 
-(defn consume [specification-stream producer processor-atom]
-  (debug "consuming specification stream")
+(defn consume [consumer producer processor-atom]
+  (info "consuming specification stream")
   (s/consume-async
-    #(route-specification % producer processor-atom)
-    specification-stream))
+    #(route-specification % producer consumer processor-atom)
+    (:message-stream consumer)))
 
 (defrecord ProcessManager [consumer producer processor-atom]
   component/Lifecycle
   (start [process-manager]
-    (debug "starting process mananger")
+    (info "starting process mananger")
     (let [processor-atom (atom {})]
-      (consume (:message-stream consumer) producer processor-atom)
+      (consume consumer producer processor-atom)
       (assoc process-manager :processor-atom processor-atom)))
   (stop [process-manager]
-    (debug "stopping process mananger")
+    (info "stopping process mananger")
     (doall (pmap component/stop (vals @processor-atom)))
     (assoc process-manager :processor-atom nil)))
 

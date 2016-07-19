@@ -17,14 +17,6 @@
 (ns oskr-expander.message
   (:require [oskr-expander.protocols :as p]))
 
-(defrecord Punctuation
-  [topic
-   partition
-   offset]
-
-  p/Punctuated
-  (punctuation? [_] true))
-
 (defrecord Specification
   [id
    sentAt
@@ -35,10 +27,7 @@
    immediate
    broadcast
    templates
-   data]
-
-  p/Punctuated
-  (punctuation? [_] false))
+   data])
 
 (defrecord Part
   [id
@@ -53,7 +42,4 @@
    data
    digestAt
    channels
-   recipientID]
-
-  p/Punctuated
-  (punctuation? [_] false))
+   recipientID])

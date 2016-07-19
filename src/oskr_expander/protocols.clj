@@ -16,9 +16,9 @@
 
 (ns oskr-expander.protocols)
 
-(defprotocol Punctuated
-  (punctuation? [message]))
-
 (defprotocol Publishable
-  (send-message [publisher message])
+  (send-message! [publisher message])
   (flush-messages [publisher]))
+
+(defprotocol Commitable
+  (commit! [commitable partition-offset]))
