@@ -26,7 +26,8 @@
            [org.apache.kafka.clients.consumer KafkaConsumer ConsumerRecord OffsetAndMetadata OffsetCommitCallback]
            [java.util Map]
            [java.io Reader]
-           [org.apache.kafka.common TopicPartition]))
+           [org.apache.kafka.common TopicPartition]
+           [org.apache.kafka.common.errors WakeupException]))
 
 (defn record->specification [^ConsumerRecord record]
   (-> (.value record)
@@ -43,8 +44,10 @@
   (fn []
     (when-not (s/closed? message-stream)
       (info "polling")
-      (->> (locking kafka-consumer
-             (.poll kafka-consumer 1000))
+      (->> (try (locking kafka-consumer
+                  (.poll kafka-consumer 1000))
+                (catch Exception e
+                  (warn "polling failed" (.getMessage e))))
            (.iterator)
            (iterator-seq)
            (s/put-all! message-stream)
