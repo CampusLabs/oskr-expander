@@ -19,10 +19,7 @@
     [com.stuartsierra.component :as component]
     [oskr-expander.producer :as producer]
     [oskr-expander.consumer :as consumer]
-    [manifold.stream :as s]
-    [oskr-expander.message :as m]
     [oskr-expander.process-manager :as process-manager]
-    [cheshire.core :as json]
     [environ.core :refer [env]]))
 
 (defn create-system []
@@ -50,24 +47,3 @@
 
 (comment
   (alter-var-root #'s component/stop))
-
-(comment
-  (do
-    (def offset-atom (atom 0))
-    (def specifications
-      (-> "/code/resources/message.json"
-          (java.io.File.)
-          slurp
-          (json/parse-string true)
-          :payload
-          m/map->Specification
-          repeat))
-
-    (def specifications-with-meta
-      (map
-        #(with-meta % {:topic     "MessageParts"
-                       :partition (rand-int 8)
-                       :offset    (swap! offset-atom inc)})
-        specifications))
-
-    (s/put-all! (get-in s [:consumer :message-stream]) (take 2 specifications-with-meta))))
