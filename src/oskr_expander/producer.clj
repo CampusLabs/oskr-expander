@@ -33,7 +33,13 @@
           message-string (json/generate-string message)
           record (ProducerRecord. topic key message-string)]
       (info "Sending record" record)
-      (.send kafka-producer record)))
+
+      (try
+        (.send kafka-producer record)
+        (catch Exception e
+          (do
+            (warn "producer failed to send" (.getMessage e))
+            (warn {:record record}))))))
 
   (flush-messages [_]
     (info "Flushing")
