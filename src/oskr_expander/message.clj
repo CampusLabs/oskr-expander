@@ -20,26 +20,23 @@
 (defrecord Specification
   [id
    sentAt
-   groupingKey
    senderId
    expansion
+   groupingGap
+   groupingKey
+   digestKey
    tags
-   immediate
-   broadcast
    templates
    data])
 
 (defrecord Part
   [id
    sentAt
-   groupingKey
    senderId
-   expansion
-   tags
-   immediate
-   broadcast
-   templates
-   data
+   recipient
+   digestKey
    digestAt
+   tags
    channels
-   recipientID])
+   templates
+   data])

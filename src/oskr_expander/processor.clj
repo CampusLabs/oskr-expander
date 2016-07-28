@@ -28,11 +28,11 @@
   (let [part-template (dissoc specification :expansion :data)]
     (map (fn [{:keys [id channels digestAt data]}]
            (->
-             (assoc part-template :recipientId id
+             (assoc part-template :recipient {:id id
+                                              :data data}
                                   :channels channels
                                   :digestAt digestAt
-                                  :data {:recipient data
-                                         :entity    entity-data})
+                                  :data entity-data)
              m/map->Part
              (with-meta (meta specification))))
          recipients)))
