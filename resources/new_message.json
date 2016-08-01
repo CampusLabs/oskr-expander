@@ -1,0 +1,256 @@
+{
+  "digestAt": "2016-07-22T09:00:00Z",
+  "tags": [
+    "account:123",
+    "community:456",
+    "portal:789"
+  ],
+  "channels": [
+    {
+      "type": "web",
+      "address": "user-317482",
+      "delay": 0
+    },
+    {
+      "type": "push",
+      "address": "device-983941",
+      "delay": 0
+    },
+    {
+      "type": "sms",
+      "address": "555-193-6129",
+      "delay": 5000
+    },
+    {
+      "type": "email",
+      "address": "john.doe@email.com",
+      "delay": 5000
+    }
+  ],
+  "groupingKey": "test_group",
+  "recipient": {
+    "id": "fff1ef01-4f8c-11e6-b45e-987e3bd189c7",
+    "data": {
+      "name": "John Doe"
+    }
+  },
+  "sentAt": "2016-07-21T21:49:28.944Z",
+  "id": "fff1ef00-4f8c-11e6-b45e-987e3bd189c7",
+  "templates": {
+    "base": {
+      "web": {
+        "subject": "this is not a template",
+        "content": "template/handlebars:template 1",
+        "items": [
+          "template/handlebars:yes, templated",
+          {
+            "foo": "abc"
+          },
+          {
+            "foo": "123"
+          },
+          {
+            "foo": "template/handlebars:template 2"
+          }
+        ],
+        "escaped": "template/none:template/handlebars:foo"
+      },
+      "push": {
+        "subject": "this is not a template",
+        "content": "template/handlebars:template 1",
+        "items": [
+          "template/handlebars:yes, templated",
+          {
+            "foo": "abc"
+          },
+          {
+            "foo": "123"
+          },
+          {
+            "foo": "template/handlebars:template 2"
+          }
+        ],
+        "escaped": "template/none:template/handlebars:foo"
+      },
+      "sms": {
+        "subject": "this is not a template",
+        "content": "template/handlebars:template 1",
+        "items": [
+          "template/handlebars:yes, templated",
+          {
+            "foo": "abc"
+          },
+          {
+            "foo": "123"
+          },
+          {
+            "foo": "template/handlebars:template 2"
+          }
+        ],
+        "escaped": "template/none:template/handlebars:foo"
+      },
+      "email": {
+        "subject": "this is not a template",
+        "content": "template/handlebars:template 1",
+        "items": [
+          "template/handlebars:yes, templated",
+          {
+            "foo": "abc"
+          },
+          {
+            "foo": "123"
+          },
+          {
+            "foo": "template/handlebars:template 2"
+          }
+        ],
+        "escaped": "template/none:template/handlebars:foo"
+      }
+    },
+    "digestBase": {
+      "web": {
+        "subject": "this is not a template",
+        "content": "template/handlebars:template 1",
+        "items": [
+          "template/handlebars:yes, templated",
+          {
+            "foo": "abc"
+          },
+          {
+            "foo": "123"
+          },
+          {
+            "foo": "template/handlebars:template 2"
+          }
+        ],
+        "escaped": "template/none:template/handlebars:foo"
+      },
+      "push": {
+        "subject": "this is not a template",
+        "content": "template/handlebars:template 1",
+        "items": [
+          "template/handlebars:yes, templated",
+          {
+            "foo": "abc"
+          },
+          {
+            "foo": "123"
+          },
+          {
+            "foo": "template/handlebars:template 2"
+          }
+        ],
+        "escaped": "template/none:template/handlebars:foo"
+      },
+      "sms": {
+        "subject": "this is not a template",
+        "content": "template/handlebars:template 1",
+        "items": [
+          "template/handlebars:yes, templated",
+          {
+            "foo": "abc"
+          },
+          {
+            "foo": "123"
+          },
+          {
+            "foo": "template/handlebars:template 2"
+          }
+        ],
+        "escaped": "template/none:template/handlebars:foo"
+      },
+      "email": {
+        "subject": "this is not a template",
+        "content": "template/handlebars:template 1",
+        "items": [
+          "template/handlebars:yes, templated",
+          {
+            "foo": "abc"
+          },
+          {
+            "foo": "123"
+          },
+          {
+            "foo": "template/handlebars:template 2"
+          }
+        ],
+        "escaped": "template/none:template/handlebars:foo"
+      }
+    },
+    "digestLayout": {
+      "web": {
+        "subject": "this is not a template",
+        "content": "template/handlebars:template 1",
+        "items": [
+          "template/handlebars:yes, templated",
+          {
+            "foo": "abc"
+          },
+          {
+            "foo": "123"
+          },
+          {
+            "foo": "template/handlebars:template 2"
+          }
+        ],
+        "escaped": "template/none:template/handlebars:foo"
+      },
+      "push": {
+        "subject": "this is not a template",
+        "content": "template/handlebars:template 1",
+        "items": [
+          "template/handlebars:yes, templated",
+          {
+            "foo": "abc"
+          },
+          {
+            "foo": "123"
+          },
+          {
+            "foo": "template/handlebars:template 2"
+          }
+        ],
+        "escaped": "template/none:template/handlebars:foo"
+      },
+      "sms": {
+        "subject": "this is not a template",
+        "content": "template/handlebars:template 1",
+        "items": [
+          "template/handlebars:yes, templated",
+          {
+            "foo": "abc"
+          },
+          {
+            "foo": "123"
+          },
+          {
+            "foo": "template/handlebars:template 2"
+          }
+        ],
+        "escaped": "template/none:template/handlebars:foo"
+      },
+      "email": {
+        "subject": "this is not a template",
+        "content": "template/handlebars:template 1",
+        "items": [
+          "template/handlebars:yes, templated",
+          {
+            "foo": "abc"
+          },
+          {
+            "foo": "123"
+          },
+          {
+            "foo": "template/handlebars:template 2"
+          }
+        ],
+        "escaped": "template/none:template/handlebars:foo"
+      }
+    }
+  },
+  "senderId": "fff1ef02-4f8c-11e6-b45e-987e3bd189c7",
+  "groupingGap": 10000,
+  "data": {
+    "title": "Position Request"
+  }
+}

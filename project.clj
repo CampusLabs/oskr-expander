@@ -33,5 +33,7 @@
                  [org.slf4j/slf4j-log4j12 "1.7.13"]
                  [org.slf4j/slf4j-api "1.7.13"]
                  [log4j/log4j "1.2.17"]]
-  :profiles {:repl {:jvm-opts
-                    ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"]}})
+  :profiles {:repl {:jvm-opts ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"]}
+             :uberjar {:jvm-opts     ["-Dclojure.compiler.direct-linking=true"]
+                       :aot          :all
+                       :uberjar-name "oskr-expander.jar"}})
