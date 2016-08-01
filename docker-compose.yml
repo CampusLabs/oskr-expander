@@ -1,6 +1,5 @@
 expander:
-  image: quay.io/orgsync/clojure:2.5.3
-  working_dir: /code
+  build: .
   command: lein repl :headless :port 1234
   dns: 172.17.0.1
   ports:
