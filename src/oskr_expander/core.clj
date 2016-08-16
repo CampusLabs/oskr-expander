@@ -20,7 +20,8 @@
     [oskr-expander.producer :as producer]
     [oskr-expander.consumer :as consumer]
     [oskr-expander.process-manager :as process-manager]
-    [environ.core :refer [env]]))
+    [environ.core :refer [env]]
+    [clojure.tools.logging :refer [error]))
 
 (defn create-system []
   (let [kafka-bootstrap (env "KAFKA_BOOTSTRAP" "kafka.service.consul:9092")]
@@ -38,12 +39,16 @@
         (component/system-using
           {:process-manager [:consumer :producer]}))))
 
+(def default-system
+  create-system)
 
-(comment
-  (def s (create-system)))
+(defn -main [& _]
+  (let [system (component/start default-system)]
+    (Thread/setDefaultUncaughtExceptionHandler
+      (reify Thread$UncaughtExceptionHandler
+        (uncaughtException [_ thread ex]
+          (error "Uncaught exception on" (.getName thread) "-"
+                 (.getMessage ex)))))
 
-(comment
-  (alter-var-root #'s component/start))
-
-(comment
-  (alter-var-root #'s component/stop))
+    (.addShutdownHook (Runtime/getRuntime)
+                      (Thread. ^Runnable #(component/stop system)))))))

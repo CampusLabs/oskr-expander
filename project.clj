@@ -36,4 +36,5 @@
   :profiles {:repl {:jvm-opts ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"]}
              :uberjar {:jvm-opts     ["-Dclojure.compiler.direct-linking=true"]
                        :aot          :all
-                       :uberjar-name "oskr-expander.jar"}})
+                       :uberjar-name "oskr-expander.jar"}}
+  :main oksr-expander.core)
