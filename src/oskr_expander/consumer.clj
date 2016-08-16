@@ -26,8 +26,7 @@
            [org.apache.kafka.clients.consumer KafkaConsumer ConsumerRecord OffsetAndMetadata OffsetCommitCallback]
            [java.util Map]
            [java.io Reader]
-           [org.apache.kafka.common TopicPartition]
-           [org.apache.kafka.common.errors WakeupException]))
+           [org.apache.kafka.common TopicPartition]))
 
 (defn record->specification [^ConsumerRecord record]
   (-> (.value record)
