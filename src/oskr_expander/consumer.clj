@@ -20,7 +20,7 @@
             [manifold.stream :as s]
             [oskr-expander.protocols :as p]
             [clojure.walk :refer [stringify-keys]]
-            [clojure.tools.logging :refer [info debug error warn]]
+            [clojure.tools.logging :refer [info debug error warn trace]]
             [cheshire.core :as json])
   (:import [org.apache.kafka.common.serialization ByteArrayDeserializer StringDeserializer]
            [org.apache.kafka.clients.consumer KafkaConsumer ConsumerRecord OffsetAndMetadata OffsetCommitCallback]
@@ -42,7 +42,7 @@
   (info "defining poller")
   (fn []
     (when-not (s/closed? message-stream)
-      (info "polling")
+      (trace "polling")
       (->> (try (locking kafka-consumer
                   (.poll kafka-consumer 1000))
                 (catch Exception e

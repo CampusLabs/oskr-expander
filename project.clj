@@ -14,7 +14,7 @@
 ; limitations under the License.
 ;
 
-(defproject oskr-expander "0.1.0"
+(defproject oskr-expander "0.1.2"
   :description "A recipient expander companion service for oskr-events."
   :url "http://github.com/orgsync/oskr-expander"
   :license {:name "Apache 2.0"
@@ -37,4 +37,4 @@
              :uberjar {:jvm-opts     ["-Dclojure.compiler.direct-linking=true"]
                        :aot          :all
                        :uberjar-name "oskr-expander.jar"}}
-  :main oksr-expander.core)
+  :main oskr-expander.core)

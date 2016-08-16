@@ -20,8 +20,10 @@
     [oskr-expander.producer :as producer]
     [oskr-expander.consumer :as consumer]
     [oskr-expander.process-manager :as process-manager]
+    [manifold.deferred :as d]
     [environ.core :refer [env]]
-    [clojure.tools.logging :refer [error]))
+    [clojure.tools.logging :refer [error]])
+  (:gen-class))
 
 (defn create-system []
   (let [kafka-bootstrap (env "KAFKA_BOOTSTRAP" "kafka.service.consul:9092")]
@@ -40,7 +42,7 @@
           {:process-manager [:consumer :producer]}))))
 
 (def default-system
-  create-system)
+  (create-system))
 
 (defn -main [& _]
   (let [system (component/start default-system)]
@@ -51,4 +53,7 @@
                  (.getMessage ex)))))
 
     (.addShutdownHook (Runtime/getRuntime)
-                      (Thread. ^Runnable #(component/stop system)))))))
+                      (Thread. ^Runnable #(component/stop system)))
+
+    @(d/deferred)))
+
