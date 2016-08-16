@@ -1,5 +1,6 @@
 expander:
   build: .
+  working_dir: /code
   command: lein repl :headless :port 1234
   dns: 172.17.0.1
   ports:
