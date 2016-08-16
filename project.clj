@@ -14,7 +14,7 @@
 ; limitations under the License.
 ;
 
-(defproject oskr-expander "0.1.0"
+(defproject oskr-expander "0.1.1"
   :description "A recipient expander companion service for oskr-events."
   :url "http://github.com/orgsync/oskr-expander"
   :license {:name "Apache 2.0"
