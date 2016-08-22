@@ -24,7 +24,6 @@
    expansion
    groupingGap
    groupingKey
-   digestKey
    tags
    templates
    data])
@@ -33,10 +32,9 @@
   [id
    sentAt
    senderId
-   recipient
-   digestKey
-   digestAt
+   recipients
+   groupingGap
+   groupingKey
    tags
-   channels
    templates
    data])
