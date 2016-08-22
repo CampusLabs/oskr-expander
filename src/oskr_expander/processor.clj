@@ -14,7 +14,7 @@
 ; limitations under the License.
 ;
 
-(ns oskr-expander.processor
+(ns oskr-expander.processo
   (:require [com.stuartsierra.component :as component]
             [manifold.stream :as s]
             [manifold.deferred :as d]
@@ -24,24 +24,26 @@
             [clojure.tools.logging :refer [info debug error warn]]
             [cheshire.core :as json]))
 
-(defn recipients->parts [{entity-data :data :as specification} recipients]
-  (let [part-template (dissoc specification :expansion :data)]
-    (map (fn [{:keys [id channels digestAt data]}]
-           (->
-             (assoc part-template :recipient {:id id
-                                              :data data}
-                                  :channels channels
-                                  :digestAt digestAt
-                                  :data entity-data)
-             m/map->Part
-             (with-meta (meta specification))))
-         recipients)))
+(defn recipients->part [{entity-data :data :as specification} recipients]
+  (let [part-template (dissoc specification :expansion :data)
+        recipients-data (map (fn [{:keys [id channels digestAt data]}]
+                               {:id       id
+                                :channels channels
+                                :digestAt digestAt
+                                :data     data}),
+                             recipients)]
+
+    (-> (assoc part-template :recipients recipients-data
+                             :data entity-data)
+        m/map->Part
+        (with-meta (meta specification)))))
 
 (defn make-recipient-handler [specification producer]
   (fn [recipients]
-    (info "enqueing parts")
-    (->> (recipients->parts specification recipients)
-         (p/send-message! producer))))
+    (info "enqueing part")
+    (let [part (recipients->part specification recipients)]
+      (info "part ->" part)
+      (p/send-message! producer part))))
 
 (defn make-message-handler [producer consumer]
   (fn [specification]
