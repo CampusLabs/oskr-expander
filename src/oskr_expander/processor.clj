@@ -14,7 +14,7 @@
 ; limitations under the License.
 ;
 
-(ns oskr-expander.processo
+(ns oskr-expander.processor
   (:require [com.stuartsierra.component :as component]
             [manifold.stream :as s]
             [manifold.deferred :as d]
