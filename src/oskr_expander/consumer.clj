@@ -42,7 +42,7 @@
   (info "defining poller")
   (fn []
     (when-not (s/closed? message-stream)
-      (info "polling")
+      (warn "polling")
       (->> (try (locking kafka-consumer
                   (.poll kafka-consumer 1000))
                 (catch Exception e
