@@ -24,16 +24,17 @@
             [clojure.tools.logging :refer [info debug error warn]]
             [cheshire.core :as json]))
 
-(defn recipients->part [{entity-data :data :as specification} recipients]
-  (let [part-template (dissoc specification :expansion :data)
-        recipients-data (map (fn [{:keys [id channels digestAt data]}]
+(defn recipients->part [{id :id entity-data :data :as specification} recipients]
+  (let [part-template (dissoc specification :id :expansion :data)
+        recipients-data (map (fn [{:keys [id channels digest data]}]
                                {:id       id
                                 :channels channels
-                                :digestAt digestAt
+                                :digest   digest
                                 :data     data}),
                              recipients)]
 
-    (-> (assoc part-template :recipients recipients-data
+    (-> (assoc part-template :specificationId id
+                             :recipients recipients-data
                              :data entity-data)
         m/map->Part
         (with-meta (meta specification)))))

@@ -24,17 +24,19 @@
    expansion
    groupingGap
    groupingKey
+   digestKey
    tags
    templates
    data])
 
 (defrecord Part
-  [id
+  [specificationId
    sentAt
    senderId
    recipients
    groupingGap
    groupingKey
+   digestKey
    tags
    templates
    data])
